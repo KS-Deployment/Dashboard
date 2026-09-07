@@ -5,7 +5,7 @@
 // process.env.VITE_API_URL liest
 // aus der .env-Datei
 // Wenn die nicht existiert, fällt es auf localhost:8000 zurück
-const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const BASE = import.meta.env.VITE_API_URL ?? (import.meta.env.DEV ? 'http://localhost:8000' : '');
 
 // Die zentrale request()-Funktion.
 // Logik für die
