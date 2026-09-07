@@ -108,8 +108,13 @@ async def submit_case(report: schemas.CaseReport, background_tasks: BackgroundTa
         "response": report.captcha_token
     }).encode("utf-8")
 
+    headers = {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "User-Agent": "FastAPI-Backend/1.0"
+    }
+
     try:
-        req = urllib.request.Request(verify_url, data=payload, method="POST")
+        req = urllib.request.Request(verify_url, data=payload, headers=headers, method="POST")
         with urllib.request.urlopen(req) as response:
             result = json.loads(response.read().decode("utf-8"))
 
