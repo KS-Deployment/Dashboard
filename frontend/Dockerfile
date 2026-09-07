@@ -24,7 +24,7 @@ RUN echo 'server { \
     } \
 }' > /app/default.conf
 
-FROM cgr.dev/chainguard/nginx:1.31.4
+FROM cgr.dev/chainguard/nginx:latest
 
 COPY --from=builder /app/dist /usr/share/nginx/html
 COPY --from=builder /app/default.conf /etc/nginx/conf.d/default.conf
