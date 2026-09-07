@@ -35,8 +35,6 @@ services:
       - USE_CREDENTIALS=${USE_CREDENTIALS}
       - VALIDATE_CERTS=${VALIDATE_CERTS}
       - RECAPTCHA_SECRET_KEY=${RECAPTCHA_SECRET_KEY}
-    expose:
-      - "8000"
 
   frontend:
     build:
@@ -46,7 +44,7 @@ services:
     depends_on:
       - backend
     ports:
-      - "80:8080"
+      - "8080:8080"
 
 volumes:
   postgres_data:
