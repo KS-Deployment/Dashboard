@@ -102,7 +102,15 @@ async def submit_case(report: schemas.CaseReport, background_tasks: BackgroundTa
     secret_key = os.getenv("TURNSTILE_SECRET_KEY")
     verify_url = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
 
-    # Construct payload for Cloudflare Turnstile API
+    # 1. Log key and token presence to Docker logs
+    print(f"[DEBUG TURNSTILE] Secret Key set: {bool(secret_key)} | Length: {len(secret_key) if secret_key else 0}", flush=True)
+    print(f"[DEBUG TURNSTILE] Token present: {bool(report.captcha_token)} | Length: {len(report.captcha_token) if report.captcha_token else 0}", flush=True)
+
+    if not secret_key:
+        err_msg = "TURNSTILE_SECRET_KEY ist im Backend-Container nicht gesetzt oder leer."
+        print(f"[DEBUG TURNSTILE ERROR] {err_msg}", flush=True)
+        raise HTTPException(status_code=500, detail=err_msg)
+
     payload = urllib.parse.urlencode({
         "secret": secret_key,
         "response": report.captcha_token
@@ -115,33 +123,46 @@ async def submit_case(report: schemas.CaseReport, background_tasks: BackgroundTa
 
     try:
         req = urllib.request.Request(verify_url, data=payload, headers=headers, method="POST")
-        with urllib.request.urlopen(req) as response:
-            result = json.loads(response.read().decode("utf-8"))
+        with urllib.request.urlopen(req, timeout=10) as response:
+            raw_body = response.read().decode("utf-8")
+            print(f"[DEBUG TURNSTILE] Cloudflare Response: {raw_body}", flush=True)
+            result = json.loads(raw_body)
 
-        # If Cloudflare evaluation fails, deny access immediately
         if not result.get("success"):
+            error_codes = result.get("error-codes", ["invalid-input-response"])
+            print(f"[DEBUG TURNSTILE] Rejected by Cloudflare: {error_codes}", flush=True)
             raise HTTPException(
                 status_code=400,
-                detail=f"Sicherheitsüberprüfung fehlgeschlagen: {result.get('error-codes', ['invalid-input-response'])}"
+                detail=f"Sicherheitsüberprüfung fehlgeschlagen: {error_codes}"
             )
+
+    except HTTPException:
+        raise
     except Exception as e:
-        if isinstance(e, HTTPException):
-            raise e
+        # Read response body if Cloudflare returned an HTTP error (400, 401, 403, etc.)
+        body_err = ""
+        if hasattr(e, "read"):
+            try:
+                body_err = f" | Response Body: {e.read().decode('utf-8')}"
+            except Exception:
+                pass
+
+        exact_error = f"{type(e).__name__}: {str(e)}{body_err}"
+        print(f"[DEBUG TURNSTILE ERROR] {exact_error}", flush=True)
         raise HTTPException(
-            status_code=500, detail="Turnstile Server-Verifikationsfehler.")
+            status_code=500,
+            detail=f"Turnstile Server-Verifikationsfehler: {exact_error}"
+        )
 
     # DATABASE PROCESSING
     report_dict = report.model_dump()
-    # remove captcha token before saving to DB
     report_dict.pop("captcha_token", None)
 
-    # create a new Submission instance with the report data
     new_submission = models.Submission(**report_dict)
     db.add(new_submission)
     db.commit()
     db.refresh(new_submission)
 
-    # Dynamically build a list of all fields for the email
     details_html = "".join([f"<li><b>{k.replace('_', ' ').title()}:</b> {v}</li>"
                             for k, v in report_dict.items() if v is not None])
 
