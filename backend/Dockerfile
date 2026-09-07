@@ -10,7 +10,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-FROM gcr.io/distroless/python3-debian13:nonroot
+FROM gcr.io/distroless/python3-debian12:nonroot
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
