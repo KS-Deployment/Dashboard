@@ -1,4 +1,3 @@
-````markdown
 # Candida auris Dashboard Austria
 
 ## Overview
@@ -257,6 +256,3 @@ Current status:
 # License
 
 This project was developed as part of an academic collaboration and is intended to support the epidemiological surveillance and documentation of *Candida auris* cases in Austria.
-
-```
-```
