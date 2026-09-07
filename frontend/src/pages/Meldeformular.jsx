@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { submitCase } from '../services/api';
 import './Meldeformular.css';
 import Navbar from '../components/Navbar';
-import ReCAPTCHA from "react-google-recaptcha";
+import { Turnstile } from '@marsidev/react-turnstile';
 
 // ─── Schritt-Anzeige ─────────────────────────────────────────
 const STEP_KEYS = ['form_step1', 'form_step2', 'form_step3', 'form_step4'];
@@ -123,7 +123,7 @@ export default function Meldeformular() {
   const [form,         setForm]         = useState(INITIAL);
   const [errors,       setErrors]       = useState({});
   const [step,         setStep]         = useState(1);
-  const [captchaToken,  setCaptchaToken] = useState("");
+  const [captchaToken, setCaptchaToken] = useState("");
   const [submitState,  setSubmitState]  = useState('idle');
   const [apiError,     setApiError]     = useState('');
   const [submissionId, setSubmissionId] = useState(null);
@@ -224,10 +224,10 @@ export default function Meldeformular() {
       setSubmissionId(res.submission_id);
       setSubmitState('success');
     } catch (err) {
-    // If it's an object, stringify it so it doesn't render as [object Object]
       const errorMsg = typeof err.message === 'object' ? JSON.stringify(err.message) : err.message;
       setApiError(err.status === 422 ? t('form_err_validation', { msg: errorMsg }) : t('form_err_generic', { msg: errorMsg }));
       setSubmitState('error');
+      setCaptchaToken("");
     }
   }
 
@@ -308,7 +308,6 @@ export default function Meldeformular() {
                     ['Tyrol','Tirol'],['Salzburg','Salzburg'],['Carinthia','Kärnten'],
                     ['Vorarlberg','Vorarlberg'],['Burgenland','Burgenland'],
                   ]} />
-                
               </Field>
               <Field id="city" label={t('form_city')} required error={errors.city}>
                 <input id="city" type="text" value={form.city}
@@ -485,24 +484,31 @@ export default function Meldeformular() {
               ))}
             </div>
           </div>
-<div className="panel">
+
+          <div className="panel">
             <div className="panel-title">{t('form_captcha_panel')}</div>
 
-            {/* Real Official Google reCAPTCHA widget alignment container */}
+            {/* Cloudflare Turnstile Widget */}
             <div style={{ display: 'flex', justifyContent: 'center', margin: '20px 0' }}>
-              <ReCAPTCHA
+              <Turnstile
                 key={i18n.language}
-                hl={i18n.language}
-                sitekey="6LcKBS0tAAAAAHx2okwkn1eIg0D2Vtwilkhc0Z3o"
-                onChange={(token) => {
-                  setCaptchaToken(token || "");
+                siteKey="0x4AAAAAAEr6YJ702I4K525N"
+                options={{
+                  language: i18n.language,
+                  theme: 'light',
+                }}
+                onSuccess={(token) => {
+                  setCaptchaToken(token);
                   setErrors((e) => ({ ...e, captcha: '' }));
                 }}
+                onExpire={() => setCaptchaToken("")}
+                onError={() => setCaptchaToken("")}
               />
             </div>
 
             {errors.captcha && <div className="field-err-msg" style={{textAlign: 'center', marginTop:'6px'}}>{errors.captcha}</div>}
           </div>
+
           {submitState === 'error' && (
             <div className="api-err-banner" role="alert">
               <strong>{t('form_error_label')}</strong> {apiError}

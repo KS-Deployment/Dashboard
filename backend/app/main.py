@@ -99,10 +99,10 @@ def get_last_updated(db: Session = Depends(get_db)):
 @app.post("/api/report-case", status_code=201)
 async def submit_case(report: schemas.CaseReport, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
 
-    secret_key = os.getenv("RECAPTCHA_SECRET_KEY")
-    verify_url = "https://www.google.com/recaptcha/api/siteverify"
+    secret_key = os.getenv("TURNSTILE_SECRET_KEY")
+    verify_url = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
 
-    # Construct payload for Google API
+    # Construct payload for Cloudflare Turnstile API
     payload = urllib.parse.urlencode({
         "secret": secret_key,
         "response": report.captcha_token
@@ -113,7 +113,7 @@ async def submit_case(report: schemas.CaseReport, background_tasks: BackgroundTa
         with urllib.request.urlopen(req) as response:
             result = json.loads(response.read().decode("utf-8"))
 
-        # If Google evaluation says false, deny access immediately
+        # If Cloudflare evaluation fails, deny access immediately
         if not result.get("success"):
             raise HTTPException(
                 status_code=400,
@@ -123,7 +123,7 @@ async def submit_case(report: schemas.CaseReport, background_tasks: BackgroundTa
         if isinstance(e, HTTPException):
             raise e
         raise HTTPException(
-            status_code=500, detail="reCAPTCHA Server-Verifikationsfehler.")
+            status_code=500, detail="Turnstile Server-Verifikationsfehler.")
 
     # DATABASE PROCESSING
     report_dict = report.model_dump()

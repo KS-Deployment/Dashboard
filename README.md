@@ -162,7 +162,7 @@ MAIL_SERVER=smtp.gmail.com
 
 SECRET_KEY=your_secret_key
 
-RECAPTCHA_SECRET_KEY=your_recaptcha_secret_key
+TURNSTILE_SECRET_KEY=your_turnstile_secret_key
 ```
 
 ---
@@ -178,7 +178,7 @@ RECAPTCHA_SECRET_KEY=your_recaptcha_secret_key
 | `MAIL_PORT`            | SMTP server port                                       |
 | `MAIL_SERVER`          | SMTP server address (e.g. smtp.gmail.com)              |
 | `SECRET_KEY`           | Secret key used to sign JWT tokens                     |
-| `RECAPTCHA_SECRET_KEY` | Secret key for Google reCAPTCHA                        |
+| `TURNSTILE_SECRET_KEY` | Secret key for Cloudflare Turnstile                    |
 
 The values must be adjusted according to the respective development, testing, or production environment.
 
