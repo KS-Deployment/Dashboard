@@ -5,9 +5,7 @@
   font-family: 'DM Sans', 'Segoe UI', sans-serif;
 }
 
-/* Inhalt schmaler halten für bessere Lesbarkeit, Navbar + Hero bleiben volle Breite */
 .about-page > *:not(.navbar):not(.about-hero) {
-  max-width: 900px;
   margin-left: auto;
   margin-right: auto;
 }

@@ -5,9 +5,7 @@
   font-family: 'DM Sans', 'Segoe UI', sans-serif;
 }
 
-/* Inhalt schmaler halten für bessere Lesbarkeit, Navbar + Hero bleiben volle Breite */
 .info-page > *:not(.navbar):not(.hero) {
-  max-width: 860px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -22,6 +20,7 @@
   padding: 36px 32px 30px;
   position: relative;
   overflow: hidden;
+  border-radius: 10px 10px 0 0;
 }
 .hero-eyebrow {
   font-size: 11px;
